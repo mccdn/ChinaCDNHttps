@@ -62,6 +62,24 @@ $null = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown');
 
 Write-Host
 
+#check whether AzureRM module has been installed 
+try
+{
+	Write-Host "Makesure AzureRM module is loaded..."
+	Import-Module -Name AzureRM
+}
+catch
+{
+	Write-Host "AzureRM module has not been added in this machine, will install now..."
+	Install-Module -Name AzureRM -AllowClobber
+	Import-Module -Name AzureRM
+}
+finally
+{
+	Write-Host "AzureRM module is loaded..."
+}
+
+#login azure account
 Login-AzureRmAccount -EnvironmentName AzureChinaCloud | Out-Null
 
 Write-Host
@@ -114,7 +132,7 @@ if ([string]::IsNullOrEmpty($keyvaultName))
 
 Write-Host "KeyVault Name: " $keyvaultName  -ForegroundColor $highlightForgroundColor
 
-$keyvault = Get-AzureRmKeyVault -Name $keyvaultName
+$keyvault = Get-AzureRmKeyVault -VaultName $keyvaultName -ErrorVariable keyvaultNotPresent -ErrorAction SilentlyContinue
 if (!$keyvault)
 {
 	write-host "KeyVault $keyvaultName does not exists, creating..."
@@ -151,7 +169,20 @@ if (!$adapp)
 	#Create the 44-character key value
 
 	$keyValue = Create-AesKey
-	$psadCredential = New-Object Microsoft.Azure.Graph.RBAC.Version1_6.ActiveDirectory.PSADPasswordCredential
+	
+	try
+	{
+		$psadCredential = New-Object Microsoft.Azure.Graph.RBAC.Version1_6.ActiveDirectory.PSADPasswordCredential -ErrorVariable psadCredentialNotPresent -ErrorAction SilentlyContinue
+		if ($psadCredentialNotPresent)
+		{
+		$psadCredential = New-Object Microsoft.Azure.Commands.Resources.Models.ActiveDirectory.PSADPasswordCredential
+		}
+	}
+	catch
+	{
+		$psadCredential = New-Object Microsoft.Azure.Commands.Resources.Models.ActiveDirectory.PSADPasswordCredential
+	}
+
 	$startDate = Get-Date
 	$psadCredential.StartDate = $startDate
 	$psadCredential.EndDate = $startDate.AddYears(2)
@@ -191,3 +222,6 @@ Write-Host "KeyVault:                     " $keyvault.VaultUri -ForegroundColor 
 Write-Host "AAD Application ClientId:     " $adapp.ApplicationId -ForegroundColor $highlightForgroundColor
 Write-Host "AAD Application ClientSecret: " $keyValue -ForegroundColor $highlightForgroundColor
 Write-Host
+
+Write-Host -NoNewLine 'KeyVault set complete! Press any key continue...';
+$null = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown');
