@@ -56,7 +56,7 @@ $highlightForgroundColor=[System.ConsoleColor]::Yellow
 
 $keyvaultResourceGroupName=$resourceGroupName
 
-Write-Host "This script it to setup KeyVault as certificate holder for Azure China CDN Https. "
+Write-Host "This script is to setup KeyVault as certificate holder for Azure China CDN Https. "
 Write-Host -NoNewLine 'Press any key to sign in with your China Azure Credential...';
 $null = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown');
 
@@ -71,7 +71,7 @@ try
 catch
 {
 	Write-Host "AzureRM module has not been added in this machine, will install now..."
-	Install-Module -Name AzureRM -AllowClobber
+	Install-Module -Name AzureRM -RequiredVersion 4.3.1 -AllowClobber
 	Import-Module -Name AzureRM
 }
 finally
