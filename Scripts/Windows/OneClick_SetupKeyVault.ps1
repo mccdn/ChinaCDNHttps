@@ -63,20 +63,41 @@ $null = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown');
 Write-Host
 
 #check whether AzureRM module has been installed 
+
+# now version 5.7.0 is the latest version to support AzureChinaCloud environment in setting up AAD Service Principal
+# any versions equal or greater than 6.0.0 don't work in China Cloud 
+$azModuleVersion = "5.7.0"
+
 try
 {
-	Write-Host "Makesure AzureRM module is loaded..."
-	Import-Module -Name AzureRM
+	Write-Host "Makesure AzureRM module with specified version $azModuleVersion is loaded..."
+	if ([string]::IsNullOrEmpty($azModuleVersion))
+	{
+		Import-Module -Name AzureRM
+	}
+	else
+	{
+		Import-Module -Name AzureRM -RequiredVersion $azModuleVersion 		
+	}
 }
 catch
 {
-	Write-Host "AzureRM module has not been added in this machine, will install now..."
-	Install-Module -Name AzureRM -RequiredVersion 4.3.1 -AllowClobber
-	Import-Module -Name AzureRM
+	Write-Host "AzureRM module with specified version $azModuleVersion has not been added in this machine, will install now..."
+
+	if ([string]::IsNullOrEmpty($azModuleVersion))
+	{
+		Install-Module -Name AzureRM -AllowClobber
+		Import-Module -Name AzureRM		
+	}
+	else
+	{
+		Install-Module -Name AzureRM -RequiredVersion $azModuleVersion -AllowClobber
+		Import-Module -Name AzureRM -RequiredVersion $azModuleVersion
+	}
 }
 finally
 {
-	Write-Host "AzureRM module is loaded..."
+	Write-Host "AzureRM module with specified version $azModuleVersion is loaded..."
 }
 
 #login azure account
